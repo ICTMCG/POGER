@@ -1,14 +1,117 @@
 # POGER
 
-Ten Words Only Still Help: Improving Black-Box AI-Generated Text Detection via Proxy-Guided Efficient Re-Sampling
+### *Ten Words Only Still Help:* Improving Black-Box AI-Generated Text Detection via Proxy-Guided Efficient Re-Sampling
 
 [Preprint](https://arxiv.org/abs/2402.09199)
 
-## Introduction
-With the rapidly increasing application of large language models (LLMs), their abuse has caused many undesirable societal problems such as fake news, academic dishonesty, and information pollution. This makes AI-generated text (AIGT) detection of great importance. Among existing methods, white-box methods are generally superior to black-box methods in terms of performance and generalizability, but they require access to LLMs' internal states and are not applicable to black-box settings. In this paper, we propose to estimate word generation probabilities as pseudo white-box features via multiple re-sampling to help improve AIGT detection under the black-box setting. Specifically, we design POGER, a proxy-guided efficient re-sampling method, which selects a small subset of representative words (e.g., 10 words) for performing multiple re-sampling in black-box AIGT detection. Experiments on datasets containing texts from humans and seven LLMs show that POGER outperforms all baselines in macro F1 under black-box, partial white-box, and out-of-distribution settings and maintains lower re-sampling costs than its existing counterparts.
+![](poger.png)
 
-## Code & Data
-Stay tuned.
+## Requirements
+- Python: 3.11
+- CUDA: 11.8
+- Python Packages:
+    ``` shell
+    pip install -r requirements.txt
+    ```
+
+## Datasets
+The binary, multiclass and OOD AIGT datasets are available at [Google Drive](https://drive.google.com/drive/folders/1xxdjZedn7le_P1HunCDF_WCuoFYI0-pz?usp=sharing).
+
+## Run
+### 1. Preprocess
+> This step is optional, as processed POGER Features and POGER-Mixture Features can be downloaded at [Google Drive](https://drive.google.com/drive/folders/1xxdjZedn7le_P1HunCDF_WCuoFYI0-pz?usp=sharing).
+
+#### Obtain POGER Features
+
+``` shell
+cd get_feature
+export HF_TOKEN=hf_xxx        # Fill in your HuggingFace access token
+export OPENAI_API_KEY=sk-xxx  # Fill in your OpenAI API key
+
+python get_poger_feature.py \
+    --n 100 \
+    --k 10 \
+    --delta 1.2 \
+    --input ../data/train.jsonl \
+    --output ./train_poger_feature.jsonl
+python get_poger_feature.py \
+    --n 100 \
+    --k 10 \
+    --delta 1.2 \
+    --input ../data/test.jsonl \
+    --output ./test_poger_feature.jsonl
+```
+
+#### Obtain POGER-Mixture Features
+##### Inference on white-box LLMs
+> This part of the code is modified from [Jihuai-wpy/SeqXGPT](https://github.com/Jihuai-wpy/SeqXGPT) under the [Apache License 2.0](https://github.com/Jihuai-wpy/SeqXGPT/blob/main/LICENSE).
+
+``` shell
+cd get_feature/get_true_prob
+
+# Launch inference server
+nohup python backend_api.py --model gpt2 --gpu 0 --port 6001 &
+nohup python backend_api.py --model gptj --gpu 0 --port 6002 &
+nohup python backend_api.py --model llama2 --gpu 1 --port 6003 &
+nohup python backend_api.py --model alpaca --gpu 2 --port 6004 &
+nohup python backend_api.py --model vicuna --gpu 3 --port 6005 &
+
+# Get true probability
+python get_true_prob.py
+```
+
+##### Mixing true probability and estimated probability
+
+``` shell
+cd get_feature
+
+python get_poger_mix_feature.py \
+    --poger-feature ./train_poger_feature.jsonl \
+    --true-prob ./get_true_prob/result/train_true_prob.jsonl \
+    --output ./train_poger_mix_feature.jsonl
+python get_poger_mix_feature.py \
+    --poger-feature ./test_poger_feature.jsonl \
+    --true-prob ./get_true_prob/result/test_true_prob.jsonl \
+    --output ./test_poger_mix_feature.jsonl
+```
+
+### 2. Train
+``` shell
+cd POGER
+
+# POGER
+python main.py \
+    --cuda \
+    --model poger \
+    --data-dir ../get_feature \
+    --data-name full_data
+
+## POGER-Mixture
+python main.py \
+    --cuda \
+    --model poger_mix \
+    --data-dir ../get_feature \
+    --data-name full_data
+```
+
+### 3. Test
+``` shell
+cd POGER
+
+# POGER
+python main.py \
+    --cuda \
+    --model poger \
+    --data-dir ../get_feature \
+    --test ./params/params_poger_full_data.pt
+
+# POGER-Mixture
+python main.py \
+    --cuda \
+    --model poger_mix \
+    --data-dir ../get_feature \
+    --test ./params/params_poger_mix_full_data.pt
+```
 
 ## How to Cite
 ```
