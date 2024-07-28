@@ -4,6 +4,10 @@
 
 [Preprint](https://arxiv.org/abs/2402.09199)
 
+[Paper](https://www.ijcai.org/proceedings/2024/55)
+
+[Chinese Blog](https://mp.weixin.qq.com/s/2-cWJAxvOuGanR6wo6J9jQ)
+
 ![](poger.png)
 
 ## Requirements
@@ -115,11 +119,11 @@ python main.py \
 
 ## How to Cite
 ```
-@article{shi2024ten,
+@inproceedings{shi2024ten,
   title={{Ten Words Only Still Help: Improving Black-Box AI-Generated Text Detection via Proxy-Guided Efficient Re-Sampling}},
   author={Shi, Yuhui and Sheng, Qiang and Cao, Juan and Mi, Hao and Hu, Beizhe and Wang, Danding},
-  journal={arXiv preprint arXiv:2402.09199},
-  url={https://arxiv.org/abs/2402.09199},
+  booktitle={Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence},
+  pages={494--502},
   year={2024}
 }
 ```
