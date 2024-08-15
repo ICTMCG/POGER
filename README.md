@@ -124,6 +124,7 @@ python main.py \
   author={Shi, Yuhui and Sheng, Qiang and Cao, Juan and Mi, Hao and Hu, Beizhe and Wang, Danding},
   booktitle={Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence},
   pages={494--502},
+  doi={10.24963/ijcai.2024/55},
   year={2024}
 }
 ```
